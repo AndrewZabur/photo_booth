@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  photo-booth-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    networks:
+      - photo-booth
+    depends_on:
+      photo-booth-db:
+        condition: service_healthy
+
+  photo-booth-db:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:5432"
+    networks:
+      - photo-booth
+    volumes:
+      - photo-booth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 3s
+
+networks:
+  photo-booth:
+
+volumes:
+  photo-booth-data:
